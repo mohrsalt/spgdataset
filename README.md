@@ -1,6 +1,10 @@
 # SpectrogramDataset
 
-- Converts audio folder to torch dataset (returns dict, requires further preprocessing) 
+```python
+pip install spgdataset
+```
+
+- Converts audio folder to torch dataset (returns dict, requires further preprocessing, for example custom collate function (see below)) 
 - Generates spectrograms for audio files, supports preloading them into memory for fast access. 
 - Generates enumerated labels (classes) based on additional data provided in metadata.json file
 - Generates masks (speech, gender, different noises etc), if intervals provided in metadata.json
@@ -94,4 +98,13 @@ dstrt = SpectrogramDatasetRouter(
     datasets: list = []
         # list of datasets to route to
 )
+```
+
+## Example of custom collate function
+Here's an example of a custom collate function to get batched spectrogram and masks/speech from dataset outputs
+```python
+    def custom_collate_fn(data):
+        inputs = torch.stack([d["spectrogram"] for d in data]).unsqueeze(1)
+        masks = torch.stack([d["masks"]["speech"] for d in data])
+        return inputs, masks
 ```
