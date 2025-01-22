@@ -70,6 +70,25 @@ dst = SpectrogramDataset(
            # number of dataset workers
         )
 ```
+### Example
+```python
+a = spgdataset.SpectrogramDataset(
+    audio_root="/path_to_dataset/audio",
+    spectrograms_root="/path_to_dataset/cache",
+    index_root="/path_to_dataset/index",
+    metadata_json_path="/path_to_dataset/metadata/metadata_new.json",
+    output_configuration={
+        "audio": False,
+        "spectrogram": True,
+        "masks": ["speech"],
+        "meta": [],
+        "label": None,
+    },
+    max_memory_cache=16000,
+)
+```
+It will create instance of SpectrogramDataset, convert audio to spectrograms, store them in /cache, create index and store index files to /index, load intervals `['speech']` from metadata.json, load spectrograms to memory (up to 16000Mb allowed to claim) and on __getitem__ will return dict `{'spectrogram': torch.Tensor, 'masks': {'speech': torch.Tensor}}`. No labels will be returned.
+
 ### metadata.json expected structure:
 ```
 [
@@ -108,3 +127,4 @@ Here's an example of a custom collate function to get batched spectrogram and ma
         masks = torch.stack([d["masks"]["speech"] for d in data])
         return inputs, masks
 ```
+
