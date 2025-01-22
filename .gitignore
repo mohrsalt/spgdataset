@@ -1,0 +1,10 @@
+.pypirc
+/dist
+__pycache__
+*.egg-info
+stuff/
+.vscode/
+.pytest_cache/
+requirements.txt
+build/
+dist/
