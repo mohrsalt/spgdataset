@@ -79,7 +79,6 @@ class AudioFileIndex:
         else:
             assert self.config.root_dir in root_dir, "Root directory mismatch"
         tree = {}
-        print(os.scandir(root_dir))
         with os.scandir(root_dir) as it:
             for entry in it:
                 if entry.is_dir():
