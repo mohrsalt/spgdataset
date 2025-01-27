@@ -206,7 +206,23 @@ class SpectrogramDataset:
         )
 
     def _generate_index_name(self):
-        index_name = f'dataset_{self.config.audio_root.split("/")[-1]}_{self.config.n_mels}x{self.config.spg_length}'
+        index_substr = ("A" if self.__output_configuration["audio"] else "") + (
+            "S" if self.__output_configuration["spectrogram"] else ""
+        )
+        if len(self.__output_configuration["masks"]) > 0:
+            index_substr += (
+                "M("
+                + "_".join([mask for mask in self.__output_configuration["masks"]])
+                + ")"
+            )
+        index_substr += "L" if self.__output_configuration["label"] is not None else ""
+        if len(self.__output_configuration["meta"]) > 0:
+            index_substr += (
+                "X("
+                + "_".join([meta for meta in self.__output_configuration["meta"]])
+                + ")"
+            )
+        index_name = f'dataset_{self.config.audio_root.split("/")[-1]}_{self.config.n_mels}x{self.config.spg_length}_{index_substr}'
         return index_name
 
     # endregion
@@ -286,23 +302,22 @@ class SpectrogramDataset:
         Computes slices for each audio file, based on speech intervals and content ratio.
         """
         for _, record in self.file_index:
-            record.slices = []
+            slices = []
             windows = self._calculate_sliding_windows(
                 record.length, self.config.window_size, self.config.window_offset
             )
 
             # if no masks, consider all windows with content ratio = 1
             if len(self.__output_configuration["masks"]) == 0:
-                record.slices = [(offset, 1) for offset in range(len(windows))]
+                slices = [(offset, 1) for offset in range(len(windows))]
             else:
-                # merge intervals
-                content_intervals = []
-                for mask_name in self.__output_configuration["masks"]:
-                    content_intervals += record.intervals[mask_name]
+                # merge intervals (numpy arrays)
+                content_intervals = np.concatenate(
+                    [ival for ival in record.intervals.values()], axis=0
+                )
 
                 # Merge overlapping intervals
-                if content_intervals:
-                    content_intervals = np.array(content_intervals)
+                if len(content_intervals) > 0:
                     content_intervals = content_intervals[
                         np.argsort(content_intervals[:, 0])
                     ]
@@ -322,7 +337,10 @@ class SpectrogramDataset:
                 overlaps = self._calculate_overlaps(windows, content_intervals)
                 for offset, overlap in enumerate(overlaps):
                     if overlap >= self.config.content_ratio:
-                        record.slices.append((offset, overlap.item()))
+                        slices.append((offset, overlap.item()))
+            record.slices = np.array(
+                slices, dtype=[("int_field", np.int32), ("float_field", np.float16)]
+            )
 
     @staticmethod
     def _calculate_sliding_windows(total_length: int, window_size: int, offset: int):
@@ -349,7 +367,9 @@ class SpectrogramDataset:
         return windows
 
     @staticmethod
-    def _calculate_overlaps(sliding_windows, intervals):
+    def _calculate_overlaps(
+        sliding_windows: np.ndarray, intervals: np.ndarray
+    ) -> np.ndarray:
         """
         Computes the overlap between sliding windows and intervals in percent to window size.
 
@@ -448,8 +468,10 @@ class SpectrogramDataset:
                     )
             for slice in record.slices:
                 assert (
-                    slice[1] >= self.config.content_ratio
-                ), "Validation failed: slice with insufficient amount of content"
+                    slice[1] + 1e-4
+                ) >= self.config.content_ratio, (
+                    "Validation failed: slice with insufficient amount of content"
+                )
             for metadata_field in self.__output_configuration["meta"]:
                 if metadata_field not in record.metadata:
                     logging.warning(

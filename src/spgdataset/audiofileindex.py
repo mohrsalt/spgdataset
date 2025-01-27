@@ -5,6 +5,7 @@ import pickle
 from . import audio as _audio
 from types import SimpleNamespace
 from dataclasses import dataclass
+import numpy as np
 
 
 ####################################################################
@@ -17,13 +18,15 @@ from dataclasses import dataclass
 # file in the index.
 
 
+# fmt: off
 @dataclass(slots=True)
 class AudioFileRecord:
-    path: str  # Path to raw audio file without audio_root
-    length: int  # Length of the raw audio file
-    intervals: dict  # dictionary containing various intervals, could be just SPEECH or MALE, FEMALE, etc.
-    slices: list  # List of computed slices using sliding window
-    metadata: dict  # Metadata associated with the audio file
+    path: str          # Path to raw audio file without audio_root
+    length: int        # Length of the raw audio file
+    intervals: dict    # dictionary containing various intervals, could be just SPEECH or MALE, FEMALE, etc.
+    slices: np.ndarray # Slices of the audio file with dtype=[('int_field', np.int32), ('float_field', np.float16)]
+    metadata: dict     # Metadata associated with the audio file
+# fmt: on
 
 
 class AudioFileIndex:
@@ -96,7 +99,13 @@ class AudioFileIndex:
                             ),
                             length=-1,
                             intervals={},
-                            slices=[],
+                            slices=np.array(
+                                [],
+                                dtype=[
+                                    ("int_field", np.int32),
+                                    ("float_field", np.float16),
+                                ],
+                            ),
                             metadata={},
                         )
                     else:
@@ -163,7 +172,9 @@ class AudioFileIndex:
                     raise Exception(
                         f"[spgdataset/AudioFileIndex] File {record.path} is missing field `{interval_name}` in intervals"
                     )
-                record.intervals[interval_name] = metadata["intervals"][interval_name]
+                record.intervals[interval_name] = np.array(
+                    metadata["intervals"][interval_name], dtype=np.int32
+                )
             # metadata
             if len(metadata_fields) > 0 and "metadata" not in metadata:
                 raise Exception(
@@ -264,11 +275,11 @@ class AudioFileIndex:
     # check if all files exist
     @staticmethod
     def files_exist(path: str):
-        if not os.path.exists(path):
+        if not os.path.exists(os.path.dirname(path)):
             return False
         extensions = [".mapping", ".index", ".config"]
         for ext in extensions:
-            if not any([f.endswith(ext) for f in os.listdir(os.path.dirname(path))]):
+            if not os.path.exists(path + ext):
                 return False
         return True
 
