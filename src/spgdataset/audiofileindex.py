@@ -37,7 +37,7 @@ class AudioFileIndex:
         intervals_names: list = [],
         metadata_fields: list = [],
         extensions: list = _audio.AUDIO_EXT,
-        sample_rate: int = 16000,
+        sample_rate: int = 32000,
     ):
         """
         Initialize the AudioFileIndex.
@@ -49,7 +49,7 @@ class AudioFileIndex:
             extensions (list, optional): List of audio file extensions to be considered. Defaults to _audio.AUDIO_EXT.
             sample_rate (int, optional): The sample rate for audio files. Defaults to 16000.
         """
-        assert sample_rate == 16000, "Only 16kHz sample rate is supported"
+        assert sample_rate == 32000, "Only 16kHz sample rate is supported"
         self.config = SimpleNamespace(
             root_dir=root_dir, extensions=extensions, sample_rate=sample_rate
         )

@@ -9,6 +9,7 @@ import multiprocessing
 from queue import Empty
 from tqdm import tqdm
 import os
+import librosa
 from math import ceil
 import pickle
 
@@ -29,57 +30,15 @@ AUDIO_EXT = [
 # these two support.
 
 
-def load_audio(filename, sr=16000, mono=True) -> np.ndarray:
-    try:
-        data = load_audio_whisper(filename, sr)
-    except:
-        data = read_audio(filename, sr).numpy()
-    if mono is True and len(data.shape) > 1 and data.shape[1] == 2:
-        data = data.mean(axis=1)
-    return data
+def load_audio(filename, sr=32000, mono=True) -> np.ndarray:
+    waveform2, _ = librosa.load(filename, sr=sr, mono=mono)
+    return waveform2
 
 
-def load_audio_whisper(file: str, sr: int = 16000):
-    """
-    Open an audio file and read as mono waveform, resampling as necessary
-
-    Parameters
-    ----------
-    file: str
-        The audio file to open
-
-    sr: int
-        The sample rate to resample the audio if necessary
-
-    Returns
-    -------
-    A NumPy array containing the audio waveform, in float32 dtype.
-    """
-
-    # This launches a subprocess to decode audio while down-mixing
-    # and resampling as necessary.  Requires the ffmpeg CLI in PATH.
-    # fmt: off
-    cmd = [
-        "ffmpeg",
-        "-nostdin",
-        "-threads", "0",
-        "-i", file,
-        "-f", "s16le",
-        "-ac", "1",
-        "-acodec", "pcm_s16le",
-        "-ar", str(sr),
-        "-"
-    ]
-    # fmt: on
-    try:
-        out = run(cmd, capture_output=True, check=True).stdout
-    except CalledProcessError as e:
-        raise RuntimeError(f"Failed to load audio: {e.stderr.decode()}") from e
-
-    return np.frombuffer(out, np.int16).flatten().astype(np.float32) / 32768.0
 
 
-def save_audio(filename: str, audio: np.ndarray, sr: int = 16000):
+
+def save_audio(filename: str, audio: np.ndarray, sr: int = 32000):
     write_audio(file=filename, data=audio, samplerate=sr)
 
 
@@ -127,9 +86,9 @@ def mel_filters(n_mels: int) -> torch.Tensor:
 
 def log_mel_spectrogram(
     audio: str | np.ndarray | torch.Tensor,
-    n_mels: int = 64,
-    n_fft: int = 400,
-    hop_length: int = 160,
+    n_mels: int = 128,
+    n_fft: int = 800,
+    hop_length: int = 320,
 ) -> torch.Tensor:
     """
     Compute the log-Mel spectrogram of
