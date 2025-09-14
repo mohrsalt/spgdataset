@@ -1,9 +1,9 @@
 import numpy as np
 import torch
-from . import audio as _audio
-from .utils import exact_div, exact_mult
-from .memcache import MemoryStorage
-from .audiofileindex import AudioFileIndex
+from spgdataset.src.spgdataset import audio as _audio
+from spgdataset.src.spgdataset.utils import exact_div, exact_mult
+from spgdataset.src.spgdataset.memcache import MemoryStorage
+from spgdataset.src.spgdataset.audiofileindex import AudioFileIndex
 import os
 import logging
 import pickle

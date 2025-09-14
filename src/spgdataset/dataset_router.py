@@ -1,4 +1,4 @@
-from .dataset import SpectrogramDataset
+from spgdataset.src.spgdataset.dataset import SpectrogramDataset
 import numpy as np
 import logging
 

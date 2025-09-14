@@ -1,3 +1,3 @@
-from .dataset import SpectrogramDataset
-from .dataset_router import SpectrogramDatasetRouter
-from .utils import exact_div, exact_mult
+from spgdataset.src.spgdataset.dataset import SpectrogramDataset
+from spgdataset.src.spgdataset.dataset_router import SpectrogramDatasetRouter
+from spgdataset.src.spgdataset.utils import exact_div, exact_mult
