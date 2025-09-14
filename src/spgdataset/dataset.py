@@ -258,7 +258,7 @@ class SpectrogramDataset:
         """
 
         def generate_spectrogram_filename(audio_filename: str):
-            return f"{audio_filename.split(".")[0]}_{self.config.window_size_sec:.2f}s_{self.config.n_mels}x{self.config.spg_length}.sc"
+            return f"{audio_filename.split('.')[0]}_{self.config.window_size_sec:.2f}s_{self.config.n_mels}x{self.config.spg_length}.sc"
 
         logging.info("[spgdataset] Looking for files without spectrograms")
         unprocessed = []
