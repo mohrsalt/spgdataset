@@ -77,7 +77,7 @@ def mel_filters(n_mels: int) -> torch.Tensor:
     """
     assert n_mels in {64, 80, 128}, f"Unsupported n_mels: {n_mels}"
 
-    with importlib.resources.path("spgdataset.assets", "mel_filters.npz") as p:
+    with importlib.resources.path("spgdataset.src.spgdataset.assets", "mel_filters.npz") as p:
         filters_path = p
 
     with np.load(filters_path, allow_pickle=False) as f:
